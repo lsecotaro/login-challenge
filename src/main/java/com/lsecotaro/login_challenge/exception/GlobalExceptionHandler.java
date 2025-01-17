@@ -46,6 +46,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InvalidPhoneException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationExceptions(InvalidPhoneException ex) {
+        ErrorResponseDto response = ErrorResponseDto.builder()
+                .errors(List.of(ErrorDetailDto.builder()
+                        .timestamp(new Date())
+                        .code(ApiErrorCode.INVALID_PHONE.getCode())
+                        .detail(ApiErrorCode.INVALID_PHONE.getDescription())
+                        .build()))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponseDto> handleValidationExceptions(UserAlreadyExistsException ex) {
         ErrorResponseDto response = ErrorResponseDto.builder()

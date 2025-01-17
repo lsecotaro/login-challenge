@@ -4,12 +4,11 @@ package com.lsecotaro.login_challenge.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lsecotaro.login_challenge.auth.controller.request.PhoneDto;
 import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
-import com.lsecotaro.login_challenge.auth.controller.response.SignUpResponseDto;
 import com.lsecotaro.login_challenge.config.TestSecurityConfig;
 import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
+import com.lsecotaro.login_challenge.exception.InvalidPhoneException;
 import com.lsecotaro.login_challenge.exception.UserAlreadyExistsException;
 import com.lsecotaro.login_challenge.auth.service.AuthService;
-import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +19,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ContextConfiguration;
 
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,33 +46,17 @@ public class AuthControllerTest {
     @Test
     public void signUpValidRequestReturnsCreated() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        Date now = new Date();
         SignUpRequestDto request = SignUpRequestDto.builder()
                 .email("valid.email@example.com")
                 .password("Valid123")
                 .name("John Doe")
                 .build();
 
-        CreatedUser createdUser = CreatedUser.builder()
-                .id(UUID.randomUUID().toString())
-                .created(now)
-                .lastLogin(now)
-                .build();
-
-        SignUpResponseDto response = SignUpResponseDto.builder()
-                .id(createdUser.getId())
-                .created(createdUser.getCreated())
-                .lastLogin(createdUser.getLastLogin())
-                .build();
-
-        when(authService.signUp(any())).thenReturn(createdUser);
-        when(authMapper.toDto(any())).thenReturn(response);
-
         mockMvc.perform(post(SIGN_UP_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty());
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -115,7 +96,7 @@ public class AuthControllerTest {
         request.setName("John Doe");
         request.setPassword("lalala");
 
-        when(authService.signUp(any())).thenThrow(new InvalidPasswordException());
+        doThrow(new InvalidPasswordException()).when(authService).signUp(any());
 
         mockMvc.perform(post(SIGN_UP_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -215,12 +196,28 @@ public class AuthControllerTest {
         request.setPassword("Valid123");
         request.setName("John Doe");
 
-        when(authService.signUp(any())).thenThrow(new UserAlreadyExistsException("User Already Exists"));
+        doThrow(new UserAlreadyExistsException("User Already Exists")).when(authService).signUp(any());
 
         mockMvc.perform(post(SIGN_UP_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error[0].detail").value("User Already Exists"));
+    }
+    @Test
+    public void signUpInvalidPhoneReturnsBadRequest() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SignUpRequestDto request = new SignUpRequestDto();
+        request.setEmail("existing.email@example.com");
+        request.setPassword("Valid123");
+        request.setName("John Doe");
+
+        doThrow(new InvalidPhoneException()).when(authService).signUp(any());
+
+        mockMvc.perform(post(SIGN_UP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error[0].detail").exists());
     }
 }

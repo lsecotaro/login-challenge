@@ -17,8 +17,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
+            .headers().frameOptions().disable()
+            .and()
             .authorizeRequests()
-            .antMatchers("/ping", "/auth/v1/sign-up").permitAll()
+            .antMatchers("/ping", "/auth/v1/sign-up", "/h2-console/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .httpBasic();
