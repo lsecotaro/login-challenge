@@ -2,7 +2,7 @@ package com.lsecotaro.login_challenge.auth.controller;
 
 import com.lsecotaro.login_challenge.auth.controller.request.PhoneDto;
 import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
-import com.lsecotaro.login_challenge.auth.controller.response.SignUpResponseDto;
+import com.lsecotaro.login_challenge.auth.controller.response.LoginResponseDto;
 import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
 import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
@@ -76,7 +76,7 @@ public class AuthMapperTest {
                 ))
                 .build();
 
-        SignUpResponseDto responseDto = authMapper.toDto(createdUser);
+        LoginResponseDto responseDto = authMapper.toDto(createdUser);
 
         assertNotNull(responseDto);
         assertEquals("123", responseDto.getId());
@@ -123,7 +123,7 @@ public class AuthMapperTest {
                 .phones(null)
                 .build();
 
-        SignUpResponseDto responseDto = authMapper.toDto(createdUser);
+        LoginResponseDto responseDto = authMapper.toDto(createdUser);
 
         assertNotNull(responseDto);
         assertEquals("456", responseDto.getId());
