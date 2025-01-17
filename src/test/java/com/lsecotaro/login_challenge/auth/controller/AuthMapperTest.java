@@ -5,7 +5,7 @@ import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
 import com.lsecotaro.login_challenge.auth.controller.response.SignUpResponseDto;
 import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -39,7 +39,7 @@ public class AuthMapperTest {
                 ))
                 .build();
 
-        SignUpParameters parameters = authMapper.toParameter(requestDto);
+        SignUpParameter parameters = authMapper.toParameter(requestDto);
 
         assertNotNull(parameters);
         assertEquals("John Doe", parameters.getName());
@@ -101,7 +101,7 @@ public class AuthMapperTest {
                 .phones(null)
                 .build();
 
-        SignUpParameters parameters = authMapper.toParameter(requestDto);
+        SignUpParameter parameters = authMapper.toParameter(requestDto);
 
         assertNotNull(parameters);
         assertEquals("Jane Doe", parameters.getName());

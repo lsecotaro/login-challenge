@@ -1,7 +1,7 @@
 package com.lsecotaro.login_challenge.auth.service.validator;
 
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
 import com.lsecotaro.login_challenge.exception.InvalidPhoneException;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +61,7 @@ public class SigUpValidatorTest {
 
     @Test()
     public void testValidatePasswordInvalid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("invalidPassword")
                 .build();
         assertThrows(InvalidPasswordException.class, () -> {
@@ -71,7 +71,7 @@ public class SigUpValidatorTest {
 
     @Test
     public void testValidatePasswordValid() {
-        SignUpParameters validParameters = SignUpParameters.builder()
+        SignUpParameter validParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .build();
         sigUpValidator.validate(validParameters); // Should not throw any exception
@@ -79,7 +79,7 @@ public class SigUpValidatorTest {
 
     @Test()
     public void testValidatePhoneNumberInvalid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .phones(List.of(Phone.builder()
                         .number(123L)
@@ -92,7 +92,7 @@ public class SigUpValidatorTest {
 
     @Test()
     public void testValidateNullPhoneNumberInvalid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .phones(List.of(Phone.builder()
                         .number(null)
@@ -104,7 +104,7 @@ public class SigUpValidatorTest {
     }
     @Test()
     public void testValidatePhoneCityInvalid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .phones(List.of(Phone.builder()
                         .number(123456L)
@@ -118,7 +118,7 @@ public class SigUpValidatorTest {
 
     @Test()
     public void testValidateNullPhoneCityInvalid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .phones(List.of(Phone.builder()
                         .number(123456L)
@@ -132,7 +132,7 @@ public class SigUpValidatorTest {
 
     @Test()
     public void testPhoneValid() {
-        SignUpParameters invalidParameters = SignUpParameters.builder()
+        SignUpParameter invalidParameters = SignUpParameter.builder()
                 .password("a2asfGfdfdf4")
                 .phones(List.of(Phone.builder()
                         .number(123456L)

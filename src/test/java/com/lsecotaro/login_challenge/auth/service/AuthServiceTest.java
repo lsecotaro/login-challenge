@@ -1,7 +1,7 @@
 package com.lsecotaro.login_challenge.auth.service;
 
 import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import com.lsecotaro.login_challenge.auth.service.validator.SigUpValidator;
 import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ public class AuthServiceTest {
 
     @Test
     public void testSignUpSuccess() {
-        SignUpParameters parameters = SignUpParameters.builder()
+        SignUpParameter parameters = SignUpParameter.builder()
                 .name("John Doe")
                 .email("johndoe@example.com")
                 .password("ValidPass123")
@@ -75,7 +75,7 @@ public class AuthServiceTest {
     @Test
     public void testSignUpWithInvalidPassword() {
         // Arrange
-        SignUpParameters parameters = SignUpParameters.builder()
+        SignUpParameter parameters = SignUpParameter.builder()
                 .name("John Doe")
                 .email("johndoe@example.com")
                 .password("invalid")
@@ -94,7 +94,7 @@ public class AuthServiceTest {
 
     @Test
     public void testSignUpWithEmptyPhones() {
-        SignUpParameters parameters = SignUpParameters.builder()
+        SignUpParameter parameters = SignUpParameter.builder()
                 .name("John Doe")
                 .email("johndoe@example.com")
                 .password("ValidPass123")

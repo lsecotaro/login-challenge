@@ -1,7 +1,7 @@
 package com.lsecotaro.login_challenge.auth.service;
 
 import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import com.lsecotaro.login_challenge.auth.service.validator.SigUpValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class AuthService {
     private final JwtGenerator jwtGenerator;
     private final PasswordEncoder passwordEncoder;
 
-    public CreatedUser signUp(SignUpParameters parameter) {
+    public CreatedUser signUp(SignUpParameter parameter) {
         log.info("Processing signUp");
 
         sigUpValidator.validate(parameter);

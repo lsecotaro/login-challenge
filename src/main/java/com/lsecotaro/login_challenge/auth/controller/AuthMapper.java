@@ -5,7 +5,7 @@ import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
 import com.lsecotaro.login_challenge.auth.controller.response.SignUpResponseDto;
 import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class AuthMapper {
-    public SignUpParameters toParameter(SignUpRequestDto signUpRequestDto) {
-        return SignUpParameters.builder()
+    public SignUpParameter toParameter(SignUpRequestDto signUpRequestDto) {
+        return SignUpParameter.builder()
                 .name(signUpRequestDto.getName())
                 .email(signUpRequestDto.getEmail())
                 .password(signUpRequestDto.getPassword())

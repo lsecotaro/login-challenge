@@ -1,7 +1,7 @@
 package com.lsecotaro.login_challenge.auth.service.validator;
 
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
-import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameters;
+import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
 import com.lsecotaro.login_challenge.exception.InvalidPhoneException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class SigUpValidator {
         return PASSWORD_PATTERN.matcher(password).matches();
     }
 
-    public void validate(SignUpParameters parameter) {
+    public void validate(SignUpParameter parameter) {
         if (!isValidPassword(parameter.getPassword())) {
             throw new InvalidPasswordException();
         }
