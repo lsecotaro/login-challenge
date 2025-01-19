@@ -16,3 +16,6 @@ $ docker run -p 8080:8080 login-challenge
 Console: http://localhost:8080/api/h2-console
 
 set jdbc url with jdbc:h2:mem:testdb
+user: sa;
+
+Let password empty

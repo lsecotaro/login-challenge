@@ -8,7 +8,7 @@ import java.util.List;
 
 @Builder
 @Getter
-public class CreatedUser {
+public class ExistingUser {
     private final String id;
     private final Date created;
     private final Date lastLogin;

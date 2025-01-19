@@ -3,7 +3,7 @@ package com.lsecotaro.login_challenge.auth.controller;
 import com.lsecotaro.login_challenge.auth.controller.request.PhoneDto;
 import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
 import com.lsecotaro.login_challenge.auth.controller.response.LoginResponseDto;
-import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
+import com.lsecotaro.login_challenge.auth.service.parameter.ExistingUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
 import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class AuthMapper {
                 .build();
     }
 
-    public LoginResponseDto toDto(CreatedUser user) {
+    public LoginResponseDto toDto(ExistingUser user) {
         return LoginResponseDto.builder()
                 .id(user.getId())
                 .isActive(user.isActive())

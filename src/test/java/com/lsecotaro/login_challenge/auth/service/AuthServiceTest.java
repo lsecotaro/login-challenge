@@ -1,13 +1,18 @@
 package com.lsecotaro.login_challenge.auth.service;
 
 import com.lsecotaro.login_challenge.auth.model.User;
+import com.lsecotaro.login_challenge.auth.model.UserPhone;
 import com.lsecotaro.login_challenge.auth.repository.UserPhoneRepository;
 import com.lsecotaro.login_challenge.auth.repository.UserRepository;
+import com.lsecotaro.login_challenge.auth.service.parameter.ExistingUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
 import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import com.lsecotaro.login_challenge.auth.service.validator.SigUpValidator;
 import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
 import com.lsecotaro.login_challenge.exception.UserAlreadyExistsException;
+import com.lsecotaro.login_challenge.exception.UserNotActiveException;
+import com.lsecotaro.login_challenge.exception.UserNotFoundException;
+import com.lsecotaro.login_challenge.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -17,11 +22,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -32,7 +35,7 @@ public class AuthServiceTest {
     private SigUpValidator sigUpValidator;
 
     @Mock
-    private JwtGenerator jwtGenerator;
+    private JwtService jwtservice;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -65,14 +68,14 @@ public class AuthServiceTest {
 
         doNothing().when(sigUpValidator).validate(parameters);
         when(passwordEncoder.encode(parameters.getPassword())).thenReturn(encodedPassword);
-        when(jwtGenerator.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
+        when(jwtservice.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
         when(userRepository.save(any())).thenReturn(User.builder().id(UUID.randomUUID().toString()).build());
 
         authService.signUp(parameters);
 
         verify(sigUpValidator).validate(parameters);
         verify(passwordEncoder).encode(parameters.getPassword());
-        verify(jwtGenerator).generateToken(eq(parameters.getEmail()), anyMap());
+        verify(jwtservice).generateToken(eq(parameters.getEmail()), anyMap());
         verify(userRepository).save(any());
         verify(userPhoneRepository, never()).save(any());
     }
@@ -94,7 +97,7 @@ public class AuthServiceTest {
         });
 
         verify(sigUpValidator).validate(parameters);
-        verifyNoInteractions(passwordEncoder, jwtGenerator);
+        verifyNoInteractions(passwordEncoder, jwtservice);
     }
 
     @Test
@@ -111,14 +114,14 @@ public class AuthServiceTest {
 
         doNothing().when(sigUpValidator).validate(parameters);
         when(passwordEncoder.encode(parameters.getPassword())).thenReturn(encodedPassword);
-        when(jwtGenerator.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
+        when(jwtservice.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
         when(userRepository.save(any())).thenReturn(User.builder().id(UUID.randomUUID().toString()).build());
 
         authService.signUp(parameters);
 
         verify(sigUpValidator).validate(parameters);
         verify(passwordEncoder).encode(parameters.getPassword());
-        verify(jwtGenerator).generateToken(eq(parameters.getEmail()), anyMap());
+        verify(jwtservice).generateToken(eq(parameters.getEmail()), anyMap());
         verify(userRepository).save(any());
         verify(userPhoneRepository, never()).save(any());
     }
@@ -141,14 +144,14 @@ public class AuthServiceTest {
 
         doNothing().when(sigUpValidator).validate(parameters);
         when(passwordEncoder.encode(parameters.getPassword())).thenReturn(encodedPassword);
-        when(jwtGenerator.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
+        when(jwtservice.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
         when(userRepository.save(any())).thenReturn(User.builder().id(UUID.randomUUID().toString()).build());
 
         authService.signUp(parameters);
 
         verify(sigUpValidator).validate(parameters);
         verify(passwordEncoder).encode(parameters.getPassword());
-        verify(jwtGenerator).generateToken(eq(parameters.getEmail()), anyMap());
+        verify(jwtservice).generateToken(eq(parameters.getEmail()), anyMap());
         verify(userRepository).save(any());
         verify(userPhoneRepository).saveAll(any());
     }
@@ -167,7 +170,7 @@ public class AuthServiceTest {
 
         doNothing().when(sigUpValidator).validate(parameters);
         when(passwordEncoder.encode(parameters.getPassword())).thenReturn(encodedPassword);
-        when(jwtGenerator.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
+        when(jwtservice.generateToken(eq(parameters.getEmail()), anyMap())).thenReturn(token);
         when(userRepository.findByEmail(any())).thenReturn(Optional.ofNullable(
                 User.builder().id(UUID.randomUUID().toString()).build()));
 
@@ -177,7 +180,64 @@ public class AuthServiceTest {
         });
 
         verify(sigUpValidator).validate(parameters);
-        verifyNoInteractions(passwordEncoder, jwtGenerator);
+        verifyNoInteractions(passwordEncoder, jwtservice);
     }
 
+    @Test
+    void testFindActiveUserUserIsActive() {
+        String email = "active.user@example.com";
+        User mockUser =User.builder()
+                .id("1")
+                .createdAt(new Date())
+                .lastLogin(new Date())
+                .name("Active User")
+                .token("valid_token")
+                .active(true)
+                .email(email)
+                .password("hashed_password")
+                .phones(List.of(UserPhone.builder()
+                        .phoneNumber(12345678L)
+                        .cityCode(911)
+                        .countryCode("+55")
+                        .build()))
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        ExistingUser existingUser = authService.findActiveUser(email);
+
+        assertNotNull(existingUser);
+        assertEquals(mockUser.getId(), existingUser.getId());
+        assertEquals(mockUser.getName(), existingUser.getName());
+        assertEquals(mockUser.getEmail(), existingUser.getEmail());
+        assertTrue(existingUser.isActive());
+        assertEquals(mockUser.getPhones().size(), existingUser.getPhones().size());
+        assertEquals(mockUser.getPhones().get(0).getPhoneNumber(), existingUser.getPhones().get(0).getNumber());
+        verify(userRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    void testFindActiveUserUserIsInactive() {
+        String email = "inactive.user@example.com";
+        User mockUser = User.builder()
+                        .active(false)
+                        .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        UserNotActiveException exception = assertThrows(UserNotActiveException.class, () -> authService.findActiveUser(email));
+        assertEquals(String.format("User with email %s not active", email), exception.getMessage());
+        verify(userRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    void testFindActiveUserUserNotFound() {
+        String email = "nonexistent.user@example.com";
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> authService.findActiveUser(email));
+        assertEquals(String.format("User with email %s not found", email), exception.getMessage());
+        verify(userRepository, times(1)).findByEmail(email);
+    }
 }
