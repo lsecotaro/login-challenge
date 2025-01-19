@@ -69,4 +69,29 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationExceptions(UserNotFoundException ex) {
+        ErrorResponseDto response = ErrorResponseDto.builder()
+                .errors(List.of(ErrorDetailDto.builder()
+                        .timestamp(new Date())
+                        .code(ApiErrorCode.USER_NOT_FOUND.getCode())
+                        .detail(ApiErrorCode.USER_NOT_FOUND.getDescription())
+                        .build()))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(UserNotActiveException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationExceptions(UserNotActiveException ex) {
+        ErrorResponseDto response = ErrorResponseDto.builder()
+                .errors(List.of(ErrorDetailDto.builder()
+                        .timestamp(new Date())
+                        .code(ApiErrorCode.USER_NOT_ACTIVE.getCode())
+                        .detail(ApiErrorCode.USER_NOT_ACTIVE.getDescription())
+                        .build()))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
 }

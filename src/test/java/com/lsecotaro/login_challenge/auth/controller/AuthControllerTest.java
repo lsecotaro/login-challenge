@@ -4,33 +4,41 @@ package com.lsecotaro.login_challenge.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lsecotaro.login_challenge.auth.controller.request.PhoneDto;
 import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
-import com.lsecotaro.login_challenge.config.TestSecurityConfig;
-import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
-import com.lsecotaro.login_challenge.exception.InvalidPhoneException;
-import com.lsecotaro.login_challenge.exception.UserAlreadyExistsException;
+import com.lsecotaro.login_challenge.auth.controller.response.LoginResponseDto;
 import com.lsecotaro.login_challenge.auth.service.AuthService;
+import com.lsecotaro.login_challenge.auth.service.parameter.ExistingUser;
+import com.lsecotaro.login_challenge.config.TestSecurityConfig;
+import com.lsecotaro.login_challenge.exception.*;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
+@ActiveProfiles("test")
 @WebMvcTest(AuthController.class)
-@ContextConfiguration(classes = TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 public class AuthControllerTest {
+    private static final String SIGN_UP_URL = "/auth/v1/public/sign-up";
+    public static final String LOGIN_URL = "/auth/v1/login";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,8 +47,6 @@ public class AuthControllerTest {
 
     @MockBean
     private AuthMapper authMapper;
-
-    private static final String SIGN_UP_URL = "/auth/v1/sign-up";
 
 
     @Test
@@ -204,6 +210,7 @@ public class AuthControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error[0].detail").value("User Already Exists"));
     }
+
     @Test
     public void signUpInvalidPhoneReturnsBadRequest() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -218,6 +225,73 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error[0].detail").exists());
+    }
+
+    @Test
+    void testLoginSuccess() throws Exception {
+        String email = "user@example.com";
+
+        ExistingUser existingUser = ExistingUser.builder().email(email).build();
+        LoginResponseDto responseDto = LoginResponseDto.builder().email(email).build();
+
+        when(authService.findActiveUser(anyString())).thenReturn(existingUser);
+        when(authMapper.toDto(any())).thenReturn(responseDto);
+
+        mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value(email));
+
+        verify(authService, times(1)).findActiveUser(anyString());
+        verify(authMapper, times(1)).toDto(any());
+    }
+
+    @Test
+    void testLoginNoAuthentication() throws Exception {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("user@example.com");
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        mockMvc.perform(get(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testLoginUserNoActiveReturnsUnauthorized() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SignUpRequestDto request = new SignUpRequestDto();
+        request.setEmail("existing.email@example.com");
+        request.setPassword("Valid123");
+        request.setName("John Doe");
+
+        doThrow(new UserNotActiveException("User Not Active")).when(authService).findActiveUser(any());
+
+        mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error[0].detail").exists());
+    }
+
+    @Test
+    public void testLoginUserNoFoundReturnsUnauthorized() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SignUpRequestDto request = new SignUpRequestDto();
+        request.setEmail("notFound.email@example.com");
+        request.setPassword("Valid123");
+        request.setName("John Doe");
+
+        doThrow(new UserNotFoundException("User Not Found")).when(authService).findActiveUser(any());
+
+        mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error[0].detail").exists());
     }
 }

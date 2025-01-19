@@ -3,7 +3,7 @@ package com.lsecotaro.login_challenge.auth.controller;
 import com.lsecotaro.login_challenge.auth.controller.request.PhoneDto;
 import com.lsecotaro.login_challenge.auth.controller.request.SignUpRequestDto;
 import com.lsecotaro.login_challenge.auth.controller.response.LoginResponseDto;
-import com.lsecotaro.login_challenge.auth.service.parameter.CreatedUser;
+import com.lsecotaro.login_challenge.auth.service.parameter.ExistingUser;
 import com.lsecotaro.login_challenge.auth.service.parameter.Phone;
 import com.lsecotaro.login_challenge.auth.service.parameter.SignUpParameter;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ public class AuthMapperTest {
 
     @Test
     void testToDto() {
-        CreatedUser createdUser = CreatedUser.builder()
+        ExistingUser existingUser = ExistingUser.builder()
                 .id("123")
                 .isActive(true)
                 .created(new Date())
@@ -76,7 +76,7 @@ public class AuthMapperTest {
                 ))
                 .build();
 
-        LoginResponseDto responseDto = authMapper.toDto(createdUser);
+        LoginResponseDto responseDto = authMapper.toDto(existingUser);
 
         assertNotNull(responseDto);
         assertEquals("123", responseDto.getId());
@@ -112,7 +112,7 @@ public class AuthMapperTest {
 
     @Test
     void testToDtoWithNullPhones() {
-        CreatedUser createdUser = CreatedUser.builder()
+        ExistingUser existingUser = ExistingUser.builder()
                 .id("456")
                 .isActive(false)
                 .created(new Date())
@@ -123,7 +123,7 @@ public class AuthMapperTest {
                 .phones(null)
                 .build();
 
-        LoginResponseDto responseDto = authMapper.toDto(createdUser);
+        LoginResponseDto responseDto = authMapper.toDto(existingUser);
 
         assertNotNull(responseDto);
         assertEquals("456", responseDto.getId());

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class SignUpRequestDto {
 
     @NotNull(message = "email must not be null")
     @Email(message = "email must be valid")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "email must be valid")
     private String email;
 
     @NotNull(message = "password must not be null")

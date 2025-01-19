@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 public class HealthController {
-    @GetMapping(value = "/ping", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/public/ping", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = org.springframework.http.HttpStatus.OK)
     public PingResponseDto ping() {
         log.info("ping");
