@@ -1,8 +1,6 @@
 package com.lsecotaro.login_challenge.config;
 
 import com.lsecotaro.login_challenge.auth.filter.AuthenticationFilter;
-import com.lsecotaro.login_challenge.security.JwtService;
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +20,14 @@ import java.util.Set;
 @EnableWebSecurity
 @Profile("!test")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    private final JwtService jwtService;
+    private final AuthenticationFilter authenticationFilter;
+    private static final String[] AUTH_WHITELIST = {
+            "/api/swagger-resources/**",
+            "/api/swagger-ui.html",
+            "/api/swagger-ui/**",
+            "/api/v2/api-docs",
+            "/api/webjars/**"
+    };
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -32,17 +37,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
+            .cors().disable()
+            .securityContext().disable()
             .headers().frameOptions().disable()
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
+            .antMatchers(AUTH_WHITELIST).permitAll()
             .anyRequest().authenticated()
             .and()
-            .addFilterBefore(new AuthenticationFilter(jwtService, publicUrls()), UsernamePasswordAuthenticationFilter.class);
-    }
-
-    private Set<String> publicUrls() {
-        return Set.of("public", "h2-console");
+            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
     }
 }

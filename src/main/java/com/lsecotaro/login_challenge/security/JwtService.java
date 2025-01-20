@@ -5,28 +5,29 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 
-@Component
-@RequiredArgsConstructor
 public class JwtService {
-    private static final String SECRET_KEY = "your-256-bit-secret-your-256-bit-secret";
     private static final long ONE_MIN_IN_MILLIS = 60 * 1000 * 60;
-    private static final long EXPIRATION_TIME = 10 * ONE_MIN_IN_MILLIS;
+    private final String secretKey;
+    private final long expirationTime;
+
+    public JwtService(String secretKey, Integer expirationInMinutes) {
+        this.secretKey = secretKey;
+        this.expirationTime = expirationInMinutes * ONE_MIN_IN_MILLIS;
+    }
 
     public String generateToken(String user, Map<String, Object> claims) {
-        Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -47,7 +48,7 @@ public class JwtService {
 
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY.getBytes())
+                .setSigningKey(secretKey.getBytes())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
