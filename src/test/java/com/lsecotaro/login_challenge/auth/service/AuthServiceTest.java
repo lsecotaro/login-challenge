@@ -22,12 +22,27 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 public class AuthServiceTest {
@@ -82,7 +97,6 @@ public class AuthServiceTest {
 
     @Test
     public void testSignUpWithInvalidPassword() {
-        // Arrange
         SignUpParameter parameters = SignUpParameter.builder()
                 .name("John Doe")
                 .email("johndoe@example.com")
@@ -214,6 +228,7 @@ public class AuthServiceTest {
         assertEquals(mockUser.getPhones().size(), existingUser.getPhones().size());
         assertEquals(mockUser.getPhones().get(0).getPhoneNumber(), existingUser.getPhones().get(0).getNumber());
         verify(userRepository, times(1)).findByEmail(email);
+        verify(userRepository, times(1)).save(any());
     }
 
     @Test

@@ -8,7 +8,11 @@ import com.lsecotaro.login_challenge.auth.controller.response.LoginResponseDto;
 import com.lsecotaro.login_challenge.auth.service.AuthService;
 import com.lsecotaro.login_challenge.auth.service.parameter.ExistingUser;
 import com.lsecotaro.login_challenge.config.TestSecurityConfig;
-import com.lsecotaro.login_challenge.exception.*;
+import com.lsecotaro.login_challenge.exception.InvalidPasswordException;
+import com.lsecotaro.login_challenge.exception.InvalidPhoneException;
+import com.lsecotaro.login_challenge.exception.UserAlreadyExistsException;
+import com.lsecotaro.login_challenge.exception.UserNotActiveException;
+import com.lsecotaro.login_challenge.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +30,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")

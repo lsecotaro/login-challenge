@@ -17,7 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +53,9 @@ public class AuthService {
         if (!user.isActive()) {
             throw new UserNotActiveException(String.format("User with email %s not active", email));
         }
+
+        user.setLastLogin(new Date());
+        userRepository.save(user);
 
         return ExistingUser.builder()
                 .id(user.getId())
