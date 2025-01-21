@@ -12,11 +12,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
+import static com.lsecotaro.login_challenge.auth.filter.AuthenticationFilter.BEARER_PREFIX;
 
 @RestController
 @RequestMapping("auth/v1")
@@ -41,10 +44,12 @@ public class AuthController {
 
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = org.springframework.http.HttpStatus.OK)
-    public LoginResponseDto login() {
+    public LoginResponseDto login(@RequestHeader(value = "Authorization", required = true) String authorization) {
         log.info("Requesting login");
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        ExistingUser existingUser = authService.findActiveUser(email);
+        String token = authorization.substring(BEARER_PREFIX.length());
+
+        ExistingUser existingUser = authService.findActiveUser(email, token);
         log.info("Login successful for user: {}", email);
         return authMapper.toDto(existingUser);
     }

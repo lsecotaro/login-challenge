@@ -1,7 +1,6 @@
 package com.lsecotaro.login_challenge.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -11,7 +10,7 @@ import java.util.Date;
 import java.util.Map;
 
 public class JwtService {
-    private static final long ONE_MIN_IN_MILLIS = 60 * 1000 * 60;
+    private static final long ONE_MIN_IN_MILLIS = 60 * 1000;
     private final String secretKey;
     private final long expirationTime;
 
@@ -37,7 +36,7 @@ public class JwtService {
             Claims claims = extractClaims(token);
             Date expirationDate = claims.getExpiration();
             return expirationDate.after(new Date());
-        } catch (ExpiredJwtException e) {
+        } catch (Exception e) {
             return false;
         }
     }

@@ -16,7 +16,7 @@ public class AuthMapper {
     public SignUpParameter toParameter(SignUpRequestDto signUpRequestDto) {
         return SignUpParameter.builder()
                 .name(signUpRequestDto.getName())
-                .email(signUpRequestDto.getEmail())
+                .email(normalizeString(signUpRequestDto.getEmail()))
                 .password(signUpRequestDto.getPassword())
                 .phones(Objects.isNull(signUpRequestDto.getPhones()) ? null : signUpRequestDto.getPhones().stream().map(this::toParameter).collect(Collectors.toList()))
                 .build();
@@ -51,4 +51,7 @@ public class AuthMapper {
                 .build();
     }
 
+    private String normalizeString(String str) {
+        return str.strip().toLowerCase();
+    }
 }

@@ -200,12 +200,13 @@ public class AuthServiceTest {
     @Test
     void testFindActiveUserUserIsActive() {
         String email = "active.user@example.com";
+        String token = "valid_token";
         User mockUser =User.builder()
                 .id("1")
                 .createdAt(new Date())
                 .lastLogin(new Date())
                 .name("Active User")
-                .token("valid_token")
+                .token(token)
                 .active(true)
                 .email(email)
                 .password("hashed_password")
@@ -218,7 +219,7 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
 
-        ExistingUser existingUser = authService.findActiveUser(email);
+        ExistingUser existingUser = authService.findActiveUser(email, token);
 
         assertNotNull(existingUser);
         assertEquals(mockUser.getId(), existingUser.getId());
@@ -232,16 +233,33 @@ public class AuthServiceTest {
     }
 
     @Test
-    void testFindActiveUserUserIsInactive() {
+    void testFindInActiveUserUserIsInactive() {
         String email = "inactive.user@example.com";
+        String token = "valid_token";
         User mockUser = User.builder()
                         .active(false)
+                        .token(token)
                         .build();
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
 
-        UserNotActiveException exception = assertThrows(UserNotActiveException.class, () -> authService.findActiveUser(email));
+        UserNotActiveException exception = assertThrows(UserNotActiveException.class, () -> authService.findActiveUser(email, token));
         assertEquals(String.format("User with email %s not active", email), exception.getMessage());
+        verify(userRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    void testFindActiveUserWithInactiveUserIsInactive() {
+        String email = "inactive.user@example.com";
+        String token = "inactive_token";
+        User mockUser = User.builder()
+                .active(true)
+                .token("token")
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+
+        UserNotActiveException exception = assertThrows(UserNotActiveException.class, () -> authService.findActiveUser(email, token));
         verify(userRepository, times(1)).findByEmail(email);
     }
 
@@ -251,7 +269,7 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> authService.findActiveUser(email));
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> authService.findActiveUser(email, "token"));
         assertEquals(String.format("User with email %s not found", email), exception.getMessage());
         verify(userRepository, times(1)).findByEmail(email);
     }

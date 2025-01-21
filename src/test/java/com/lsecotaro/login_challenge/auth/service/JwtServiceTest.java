@@ -63,7 +63,7 @@ public class JwtServiceTest {
         assertNotNull(decodedClaims.getExpiration());
 
         long expirationTimeInMillis = decodedClaims.getExpiration().getTime() - decodedClaims.getIssuedAt().getTime();
-        long expectedExpirationTimeInMillis = 10 * 60 * 60 * 1000; // 10 hours in milliseconds
+        long expectedExpirationTimeInMillis = 10 * 60 * 1000; // 10 minutes in milliseconds
         assertTrue(Math.abs(expirationTimeInMillis - expectedExpirationTimeInMillis) < 1000); // Allow a small margin for execution time
     }
 
