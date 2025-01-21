@@ -1,7 +1,8 @@
 # Login-challenge
 SignUp and Login api.
 
-To meet the requirement of using Gradle 7.4 and Java 11, I decided to utilize Docker.
+Documentation: [LoginChallenge_Documentation.pdf](doc%2FLoginChallenge_Documentation.pdf)
+
 
 ## Compile and run the project
 
