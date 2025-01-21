@@ -246,16 +246,17 @@ public class AuthControllerTest {
         ExistingUser existingUser = ExistingUser.builder().email(email).build();
         LoginResponseDto responseDto = LoginResponseDto.builder().email(email).build();
 
-        when(authService.findActiveUser(anyString())).thenReturn(existingUser);
+        when(authService.findActiveUser(anyString(), anyString())).thenReturn(existingUser);
         when(authMapper.toDto(any())).thenReturn(responseDto);
 
         mockMvc.perform(post(LOGIN_URL)
+                        .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.email").value(email));
 
-        verify(authService, times(1)).findActiveUser(anyString());
+        verify(authService, times(1)).findActiveUser(anyString(), anyString());
         verify(authMapper, times(1)).toDto(any());
     }
 
@@ -268,6 +269,7 @@ public class AuthControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         mockMvc.perform(get(LOGIN_URL)
+                        .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -280,9 +282,10 @@ public class AuthControllerTest {
         request.setPassword("Valid123");
         request.setName("John Doe");
 
-        doThrow(new UserNotActiveException("User Not Active")).when(authService).findActiveUser(any());
+        doThrow(new UserNotActiveException("User Not Active")).when(authService).findActiveUser(anyString(), anyString());
 
         mockMvc.perform(post(LOGIN_URL)
+                        .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -297,9 +300,10 @@ public class AuthControllerTest {
         request.setPassword("Valid123");
         request.setName("John Doe");
 
-        doThrow(new UserNotFoundException("User Not Found")).when(authService).findActiveUser(any());
+        doThrow(new UserNotFoundException("User Not Found")).when(authService).findActiveUser(anyString(), anyString());
 
         mockMvc.perform(post(LOGIN_URL)
+                        .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())

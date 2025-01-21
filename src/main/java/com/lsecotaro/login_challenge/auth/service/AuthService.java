@@ -39,23 +39,20 @@ public class AuthService {
     public void signUp(SignUpParameter parameter) {
         log.info("Processing signUp");
 
-        validate(parameter);
-        String token = generateToken(parameter);
+        validateSignUp(parameter);
+        String token = generateToken(parameter.getEmail());
         User createdUser = saveUser(parameter, token);
         savePhones(createdUser, parameter.getPhones());
 
         log.info("User created: {}", createdUser.getId());
     }
 
-    public ExistingUser findActiveUser(String email) {
+    public ExistingUser findActiveUser(String email, String token) {
         User user = findUser(email);
 
-        if (!user.isActive()) {
-            throw new UserNotActiveException(String.format("User with email %s not active", email));
-        }
+        validateLogin(email, token, user);
 
-        user.setLastLogin(new Date());
-        userRepository.save(user);
+        updateUserToken(email, user);
 
         return ExistingUser.builder()
                 .id(user.getId())
@@ -74,6 +71,21 @@ public class AuthService {
                             .build())
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    private void updateUserToken(String email, User user) {
+        user.setLastLogin(new Date());
+        user.setToken(generateToken(email));
+        userRepository.save(user);
+    }
+
+    private void validateLogin(String email, String token, User user) {
+        if (!user.isActive()) {
+            throw new UserNotActiveException(String.format("User with email %s not active", email));
+        }
+        if (!token.equals(user.getToken())) {
+            throw new UserNotActiveException(String.format("Inactive token for user with email %s", email));
+        }
     }
 
     private void savePhones(User createdUser, List<Phone> phones) {
@@ -107,13 +119,13 @@ public class AuthService {
         return userRepository.save(newUser);
     }
 
-    private String generateToken(SignUpParameter parameter) {
+    private String generateToken(String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", "operator");
-        return jwtservice.generateToken(parameter.getEmail(), claims);
+        return jwtservice.generateToken(email, claims);
     }
 
-    private void validate(SignUpParameter parameter) {
+    private void validateSignUp(SignUpParameter parameter) {
         sigUpParametersValidator.validate(parameter);
 
         Optional<User> existingUser = userRepository.findByEmail(parameter.getEmail());
@@ -123,10 +135,7 @@ public class AuthService {
     }
 
     private User findUser(String email) {
-        Optional<User> existingUser = userRepository.findByEmail(email);
-        if(existingUser.isEmpty()) {
-            throw new UserNotFoundException(String.format("User with email %s not found", email));
-        }
-        return existingUser.get();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(String.format("User with email %s not found", email)));
     }
 }

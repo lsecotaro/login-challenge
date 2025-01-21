@@ -1,5 +1,11 @@
 package com.lsecotaro.login_challenge.auth.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import com.lsecotaro.login_challenge.exception.dto.ApiErrorCode;
+import com.lsecotaro.login_challenge.exception.dto.ErrorDetailDto;
+import com.lsecotaro.login_challenge.exception.dto.ErrorResponseDto;
 import com.lsecotaro.login_challenge.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,14 +19,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
-    private static final String BEARER_PREFIX = "Bearer ";
-    public static final String AUTHORIZATION = "Authorization";
-    public static final String ANONYMOUS = "anonymous";
+    public static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String ANONYMOUS = "anonymous";
 
     private final JwtService jwtService;
     private final Set<String> urlWithoutAuthentication;
@@ -44,12 +52,30 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 setAuthentication(email);
             }
         } else {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.getWriter().write("Token is expired or invalid");
+            buildErrorResponse(response);
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void buildErrorResponse(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
+                .errors(List.of(ErrorDetailDto.builder()
+                        .timestamp(new Date())
+                        .code(ApiErrorCode.TOKEN_EXPIRED_OR_INVALID.getCode())
+                        .detail("Token is expired or invalid")
+                        .build()))
+                .build();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.setDateFormat(new StdDateFormat());
+        String jsonResponse = mapper.writeValueAsString(errorResponseDto);
+
+        response.setContentType("application/json");
+
+        response.getWriter().write(jsonResponse);
     }
 
 
@@ -65,7 +91,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private String getTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION);
-        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
+        if (Objects.nonNull(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
